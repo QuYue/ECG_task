@@ -26,7 +26,7 @@ train_args = {
     'train_ratio': 0.8,
     'learn_rate': 0.001,
 }
-# 0.00008 batch_size=10 可以达到90.8
+# 0.00008 batch_size=10 可以达到90.8 # 0.001 batch_size=10, model3可以达到91.8%
 Args = arguments.get()
 arguments.add(Args, train_args) # add the train_args
 Args.cuda = Args.cuda and torch.cuda.is_available()
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     del ECG_train_data, ECG_train_label,  train_x, valid_x, train_y, valid_y
     #%%
     print('==>Training Model')
-    diagnosis = model.Diagnosis2()
+    diagnosis = model.Diagnosis()
     optimizer = torch.optim.Adam(diagnosis.parameters(), lr=Args.learn_rate) # optimizer
     loss_func = torch.nn.CrossEntropyLoss()  # 损失函数（交叉熵）
     criterion = torch.nn.L1Loss()
@@ -77,6 +77,7 @@ if __name__ == '__main__':
             y = torch.squeeze(y) # delete a axis
             if Args.cuda:
                 x, y = x.cuda(), y.cuda()
+            diagnosis.train()  # train model
             output = diagnosis(x)
             loss = loss_func(output, y)  # loss
             optimizer.zero_grad()  # clear gradients for next train
@@ -100,7 +101,6 @@ if __name__ == '__main__':
                 x, y = x.cuda(), y.cuda()
             diagnosis.eval() # test model
             output = diagnosis(x)
-            diagnosis.train() # train model
             if Args.cuda:
                 pred = torch.max(output, 1)[1].cuda().data.squeeze()
             else:
@@ -118,6 +118,13 @@ if __name__ == '__main__':
             F1_list.append(F1)
             acc_list.append(accuracy)
             drawing.draw_result(acc_list, F1_list, figure, ['Accuracy', 'F1'], True)
+        # save model
+        if F1 == max(F1_list):
+            print('save model')
+            save_model = diagnosis.cpu()
+            torch.save(save_model, '../Model/model1.pkl')
+            diagnosis = diagnosis.cuda()
+            del save_model
         # empty memory
         del x, y, all_pred, all_y, output
         if Args.cuda: torch.cuda.empty_cache() # empty GPU memory
