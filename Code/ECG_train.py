@@ -117,7 +117,7 @@ if __name__ == '__main__':
         if Args.draw:
             F1_list.append(F1)
             acc_list.append(accuracy)
-            drawing.draw_result(acc_list, F1_list, figure, ['Accuracy', 'F1'], True)
+            drawing.draw_result([acc_list, F1_list], figure, ['Accuracy', 'F1'], True)
         # save model
         if F1 == max(F1_list):
             print('save model')

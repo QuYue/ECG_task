@@ -60,74 +60,100 @@ if __name__ == '__main__':
     del ECG_train_data, ECG_train_label,  train_x, valid_x, train_y, valid_y
     #%%
     print('==>Training Model')
-    diagnosis = model_LC.Diagnosis2()
-    optimizer = torch.optim.Adam(diagnosis.parameters(), lr=Args.learn_rate) # optimizer
+    diagnosis1 = model_LC.Diagnosis2()
+    diagnosis2 = model_LC.Diagnosis2()
+    optimizer1 = torch.optim.Adam(diagnosis1.parameters(), lr=Args.learn_rate) # optimizer
+    optimizer2 = torch.optim.Adam(diagnosis2.parameters(), lr=Args.learn_rate)  # optimizer
     loss_func = torch.nn.CrossEntropyLoss()  # 损失函数（交叉熵）
     if Args.draw:
         plt.ion()
         figure = plt.figure(1, figsize=(10, 6))
-        F1_list = []
-        acc_list = []
+        F1_list1 = []
+        acc_list1 = []
+        F1_list2 = []
+        acc_list2 = []
     if Args.cuda:
-        diagnosis = diagnosis.cuda()
+        diagnosis1 = diagnosis1.cuda()
+        diagnosis2 = diagnosis2.cuda()
     for epoch in range(Args.epoch):
         # Training
         for step, (x, y) in enumerate(train_loader):
             y = torch.squeeze(y) # delete a axis
             if Args.cuda:
                 x, y = x.cuda(), y.cuda()
-            diagnosis.train()  # train model
-            output, embedding = diagnosis(x)
-            link_constraints = model_LC.LinkConstraints(embedding, y, weight_decay=Args.LCw)
-            loss = loss_func(output, y)  # loss
-            loss += link_constraints
-            optimizer.zero_grad()  # clear gradients for next train
-            loss.backward()  #  backpropagation, compute gradients
-            optimizer.step()  # apply gradients
+            diagnosis1.train()  # train model
+            diagnosis2.train()
+            output1, embedding1 = diagnosis1(x)
+            output2, embedding2 = diagnosis2(x)
+            link_constraints2 = model_LC.LinkConstraints(embedding2, y, weight_decay=Args.LCw)
+            loss1 = loss_func(output1, y)  # loss
+            loss2 = loss_func(output2, y)
+            loss2 += link_constraints2
+            optimizer1.zero_grad()  # clear gradients for next train
+            loss1.backward()  #  backpropagation, compute gradients
+            optimizer1.step()  # apply gradients
+            optimizer2.zero_grad()  # clear gradients for next train
+            loss2.backward()  #  backpropagation, compute gradients
+            optimizer2.step()  # apply gradients
             if step % 1 == 0:
                 if Args.cuda:
-                    pred = torch.max(output, 1)[1].cuda().data.squeeze()
+                    pred1 = torch.max(output1, 1)[1].cuda().data.squeeze()
+                    pred2 = torch.max(output2, 1)[1].cuda().data.squeeze()
                 else:
-                    pred = torch.max(output, 1)[1].data.squeeze()
+                    pred1 = torch.max(output1, 1)[1].data.squeeze()
+                    pred2 = torch.max(output2, 1)[1].data.squeeze()
                 # evaluate
-                accuracy = score.accuracy(pred, y)
-                F1 = score.F1(pred, y)
-                print('Epoch: %s |step: %s | train loss: %.2f | accuracy: %.2f | F1: %.4f' %(epoch, step, loss.data, accuracy, F1))
+                accuracy1 = score.accuracy(pred1, y)
+                accuracy2 = score.accuracy(pred2, y)
+                F1_1 = score.F1(pred1, y)
+                F1_2 = score.F1(pred2, y)
+                print('Epoch: %s |step: %s | accuracy1: %.2f | F1: %.4f | accuracy2: %.2f | F1: %.4f |' %(epoch, step, accuracy1, F1_1, accuracy2, F1_2))
         #%% Testing
         all_y = []
-        all_pred = []
+        all_pred1 = []
+        all_pred2 = []
         for step, (x, y) in enumerate(valid_loader):
             y = torch.squeeze(y)  # delete a axis
             if Args.cuda:
                 x, y = x.cuda(), y.cuda()
-            diagnosis.eval() # test model
-            output, _ = diagnosis(x)
+            diagnosis1.eval() # test model
+            diagnosis2.eval()
+            output1, _ = diagnosis1(x)
+            output2, _ = diagnosis2(x)
             if Args.cuda:
-                pred = torch.max(output, 1)[1].cuda().data.squeeze()
+                pred1 = torch.max(output1, 1)[1].cuda().data.squeeze()
+                pred2 = torch.max(output2, 1)[1].cuda().data.squeeze()
             else:
-                pred = torch.max(output, 1)[1].data.squeeze()
+                pred1 = torch.max(output1, 1)[1].data.squeeze()
+                pred2 = torch.max(output2, 1)[1].data.squeeze()
             all_y.append(y)
-            all_pred.append(pred)
+            all_pred1.append(pred1)
+            all_pred2.append(pred2)
         # evaluate
         y = torch.cat(all_y)
-        pred = torch.cat(all_pred)
-        accuracy = score.accuracy(pred, y)
-        F1 = score.F1(pred, y)
-        print('Epoch: %s | test accuracy: %.2f | F1: %.4f' % (epoch, accuracy, F1))
+        pred1 = torch.cat(all_pred1)
+        pred2 = torch.cat(all_pred2)
+        accuracy1 = score.accuracy(pred1, y)
+        accuracy2 = score.accuracy(pred2, y)
+        F1_1 = score.F1(pred1, y)
+        F1_2 = score.F1(pred2, y)
+        print('Epoch: %s | test accuracy1: %.2f | F1: %.4f | accuracy2: %.2f | F1: %.4f' % (epoch, accuracy1, F1_1, accuracy2, F1_2))
         # drawing
         if Args.draw:
-            F1_list.append(F1)
-            acc_list.append(accuracy)
-            drawing.draw_result(acc_list, F1_list, figure, ['Accuracy', 'F1'], True)
+            F1_list1.append(F1_1)
+            acc_list1.append(accuracy1)
+            F1_list2.append(F1_2)
+            acc_list2.append(accuracy2)
+            drawing.draw_result([acc_list1, F1_list1, acc_list2, F1_list2], figure, ['Accuracy', 'F1', 'Accuracy_LC', 'F1_LC'], True)
         # save model
-        if F1 == max(F1_list):
-            print('save model')
-            save_model = diagnosis.cpu()
-            torch.save(save_model, '../Model/model1.pkl')
-            diagnosis = diagnosis.cuda()
-            del save_model
+        # if F1 == max(F1_list):
+        #     print('save model')
+        #     save_model = diagnosis.cpu()
+        #     torch.save(save_model, '../Model/model1.pkl')
+        #     diagnosis = diagnosis.cuda()
+        #     del save_model
         # empty memory
-        del x, y, all_pred, all_y, output
+        del x, y, all_pred1, all_pred2, all_y, output1, output2
         if Args.cuda: torch.cuda.empty_cache() # empty GPU memory
         # learning rate change
         # if epoch % 10 == 9:
