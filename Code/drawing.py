@@ -4,7 +4,7 @@
 @Author  : QuYue
 @File    : drawing.py
 @Software: PyCharm
-Introduction: Drawint the result.
+Introduction: Drawing the result.
 """
 #%% Import Packages
 import matplotlib.pyplot as plt
