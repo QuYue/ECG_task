@@ -78,7 +78,7 @@ if __name__ == '__main__':
                 x, y = x.cuda(), y.cuda()
             diagnosis.train()  # train model
             output, embedding = diagnosis(x)
-            link_constraints = model_LC.LinkConstraints(embedding, y, weight_decay=0.1)
+            link_constraints = model_LC.LinkConstraints(embedding, y, weight_decay=0.001)
             loss = loss_func(output, y)  # loss
             loss += link_constraints
             optimizer.zero_grad()  # clear gradients for next train
