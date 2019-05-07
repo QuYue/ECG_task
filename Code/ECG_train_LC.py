@@ -21,7 +21,7 @@ train_args = {
     'cuda': True,
     'draw': True,
     'datanum': 600,
-    'epoch': 200,
+    'epoch': 300,
     'batch_size': 10,
     'train_ratio': 0.8,
     'learn_rate': 0.001,
@@ -78,7 +78,7 @@ if __name__ == '__main__':
                 x, y = x.cuda(), y.cuda()
             diagnosis.train()  # train model
             output, embedding = diagnosis(x)
-            link_constraints = model_LC.LinkConstraints(embedding, y, weight_decay=0.001)
+            link_constraints = model_LC.LinkConstraints(embedding, y, weight_decay=0.0000001)
             loss = loss_func(output, y)  # loss
             loss += link_constraints
             optimizer.zero_grad()  # clear gradients for next train
