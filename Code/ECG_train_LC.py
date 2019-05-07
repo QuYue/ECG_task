@@ -60,7 +60,7 @@ if __name__ == '__main__':
     del ECG_train_data, ECG_train_label,  train_x, valid_x, train_y, valid_y
     #%%
     print('==>Training Model')
-    diagnosis = model_LC.Diagnosis()
+    diagnosis = model_LC.Diagnosis2()
     optimizer = torch.optim.Adam(diagnosis.parameters(), lr=Args.learn_rate) # optimizer
     loss_func = torch.nn.CrossEntropyLoss()  # 损失函数（交叉熵）
     if Args.draw:
