@@ -26,7 +26,7 @@ train_args = {
     'train_ratio': 0.8,
     'learn_rate': 0.001,
 }
-# 0.00008 batch_size=10 可以达到90.8 # 0.001 batch_size=10, model3可以达到91.8%
+# 0.00008 batch_size=10 可以达到90.8 # 0.001 batch_size=10, model2可以达到91.8%
 Args = arguments.get()
 arguments.add(Args, train_args) # add the train_args
 Args.cuda = Args.cuda and torch.cuda.is_available()
@@ -78,7 +78,7 @@ if __name__ == '__main__':
                 x, y = x.cuda(), y.cuda()
             diagnosis.train()  # train model
             output, embedding = diagnosis(x)
-            link_constraints = model_LC.LinkConstraints(embedding, y, weight_decay=0.0000001)
+            link_constraints = model_LC.LinkConstraints(embedding, y, weight_decay=Args)
             loss = loss_func(output, y)  # loss
             loss += link_constraints
             optimizer.zero_grad()  # clear gradients for next train

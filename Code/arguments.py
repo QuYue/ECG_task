@@ -28,6 +28,8 @@ def get():
                         help='learning-rate for training(default: 0.001)')
     parser.add_argument('-s', '--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
+    parser.add_argument('-w', '--LCw', type=float, default=0.0, metavar='Float',
+                        help='the weight decay of the Link Constraints(default: 0.0)')
 
     args = parser.parse_args()
     return args
