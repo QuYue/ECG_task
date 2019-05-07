@@ -22,7 +22,7 @@ train_args = {
     'draw': True,
     'datanum': 600,
     'epoch': 300,
-    'batch_size': 10,
+    #'batch_size': 10,
     'train_ratio': 0.8,
     'learn_rate': 0.001,
 }
