@@ -25,6 +25,7 @@ def draw_result(result, fig, title=[], show=False):
         subplot[i].plot(xaxis[i], result[i], marker='o')
         subplot[i].grid()
         subplot[i].set_title(title[i])
+        subplot[i].set_ylim(0, 1)
         if show:
             subplot[i].annotate(s=title[i] + ': %.3f' % result[i][-1], xy=(xaxis[i][-1], result[i][-1]),
                                 xytext=(-20, 10), textcoords='offset points')
@@ -42,6 +43,6 @@ if __name__ == '__main__':
         a = np.random.randn(2)
         b.append(a[0])
         c.append(a[1])
-        draw_result(b, c, fig, ['a', 'b'], True)
+        draw_result([b, c], fig, ['a', 'b'], True)
     plt.ioff()
     plt.show()

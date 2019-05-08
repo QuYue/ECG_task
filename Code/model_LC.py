@@ -62,6 +62,12 @@ class Diagnosis(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d((1, 1))
         )
+        self.explain = nn.Sequential(
+            nn.Linear(512, 100),
+            nn.ReLU(),
+            nn.Linear(100, 512),
+            nn.ReLU(),
+        )
         self.network = nn.Sequential(
             nn.Linear(512, 100),  # 卷积层后加一个普通的神经网络
             nn.Dropout(0.5),
@@ -81,6 +87,7 @@ class Diagnosis(nn.Module):
         x = self.conv6(x)
         x = self.conv7(x)
         x = x.view(x.size(0), -1)  # 将数据展平 (Batch_size * 28160)
+        x = self.explain(x)
         embedding = x
         output = self.network(x)
         return output, embedding
